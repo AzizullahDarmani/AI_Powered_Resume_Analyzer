@@ -6,7 +6,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Resume
+from .models import Resume, Job, ResumeMatch
 
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
@@ -283,3 +283,11 @@ def extract_education(text):
         formatted_education.append("\n".join(entry))
     
     return "\n\n".join(formatted_education) if formatted_education else "No specific education detected"
+def jobs_list(request):
+    jobs = Job.objects.all().order_by('-created_at')
+    if request.user.is_authenticated:
+        user_resumes = Resume.objects.filter(user=request.user)
+        for job in jobs:
+            matches = ResumeMatch.objects.filter(job=job, resume__in=user_resumes)
+            job.user_matches = matches
+    return render(request, 'accounts/jobs.html', {'jobs': jobs})
