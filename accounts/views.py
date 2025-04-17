@@ -283,6 +283,22 @@ def extract_education(text):
         formatted_education.append("\n".join(entry))
     
     return "\n\n".join(formatted_education) if formatted_education else "No specific education detected"
+from .forms import JobForm
+
+def add_job(request):
+    if not request.user.is_superuser:
+        return redirect('jobs')
+        
+    if request.method == 'POST':
+        form = JobForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Job posted successfully!')
+            return redirect('jobs')
+    else:
+        form = JobForm()
+    return render(request, 'accounts/add_job.html', {'form': form})
+
 def jobs_list(request):
     jobs = Job.objects.all().order_by('-created_at')
     if request.user.is_authenticated:

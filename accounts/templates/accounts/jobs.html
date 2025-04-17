@@ -5,7 +5,7 @@
     
     {% if user.is_superuser %}
     <div class="admin-actions">
-        <a href="{% url 'admin:accounts_job_add' %}" class="btn btn-primary">Add New Job</a>
+        <a href="{% url 'add_job' %}" class="btn btn-primary">Add New Job</a>
     </div>
     {% endif %}
 
