@@ -1,4 +1,11 @@
 
+# Download required NLTK data
+import nltk
+nltk.download('punkt')
+nltk.download('stopwords')
+nltk.download('wordnet')
+
+
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
@@ -103,28 +110,101 @@ from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
 
 def calculate_resume_job_match(resume_text, job):
-    # Create TF-IDF vectorizer
-    vectorizer = TfidfVectorizer(stop_words='english')
+    from nltk.tokenize import word_tokenize
+    from nltk.corpus import stopwords
+    from nltk.stem import WordNetLemmatizer
+    import re
     
-    # Combine required skills with job description
-    job_text = f"{job.description} {job.required_skills}"
+    # Text preprocessing function
+    def preprocess_text(text):
+        # Convert to lowercase and remove special characters
+        text = re.sub(r'[^\w\s]', ' ', text.lower())
+        # Tokenize
+        tokens = word_tokenize(text)
+        # Remove stopwords and lemmatize
+        lemmatizer = WordNetLemmatizer()
+        stop_words = set(stopwords.words('english'))
+        tokens = [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
+        return ' '.join(tokens)
+    
+    # Preprocess texts
+    processed_resume = preprocess_text(resume_text)
+    processed_job_desc = preprocess_text(f"{job.description} {job.required_skills}")
+    
+    # Create TF-IDF vectorizer with custom parameters
+    vectorizer = TfidfVectorizer(
+        stop_words='english',
+        ngram_range=(1, 2),  # Consider both unigrams and bigrams
+        max_features=5000,
+        min_df=2,
+        max_df=0.95
+    )
     
     # Create document matrix
-    documents = [resume_text, job_text]
+    documents = [processed_resume, processed_job_desc]
     tfidf_matrix = vectorizer.fit_transform(documents)
     
     # Calculate cosine similarity
     similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
     
-    # Convert to percentage
-    match_score = similarity * 100
+    # Extract skills with context
+    resume_skills_text = extract_skills(resume_text)
+    resume_skills = set()
+    for category in resume_skills_text.split('\n'):
+        if ':' in category:
+            skills = category.split(':')[1].strip().lower()
+            resume_skills.update(skill.strip() for skill in skills.split(','))
     
-    # Extract matched skills
-    resume_skills = set(extract_skills(resume_text).lower().split(', '))
-    job_skills = set(job.required_skills.lower().split(', '))
+    job_skills = set(skill.strip().lower() for skill in job.required_skills.split(','))
+    
+    # Calculate skills match percentage
     matched_skills = resume_skills.intersection(job_skills)
+    skills_match_score = len(matched_skills) / len(job_skills) if job_skills else 0
     
-    return match_score, ', '.join(matched_skills)
+    # Calculate experience match
+    resume_exp_years = extract_experience_years(resume_text)
+    exp_match_score = min(resume_exp_years / max(job.experience_years, 1), 1.0)
+    
+    # Calculate final weighted score
+    weights = {
+        'content_similarity': 0.4,
+        'skills_match': 0.4,
+        'experience_match': 0.2
+    }
+    
+    final_score = (
+        similarity * weights['content_similarity'] * 100 +
+        skills_match_score * weights['skills_match'] * 100 +
+        exp_match_score * weights['experience_match'] * 100
+    )
+    
+    return final_score, ', '.join(matched_skills)
+
+def extract_experience_years(text):
+    """Extract total years of experience from resume text"""
+    import re
+    
+    # Look for patterns like "X years of experience" or "X+ years"
+    year_patterns = [
+        r'(\d+)(?:\+)?\s*(?:years?)\s*(?:of)?\s*(?:experience|work)',
+        r'(?:experience|work)(?:\s*:)?\s*(\d+)(?:\+)?\s*years?'
+    ]
+    
+    total_years = 0
+    for pattern in year_patterns:
+        matches = re.finditer(pattern, text.lower())
+        for match in matches:
+            years = int(match.group(1))
+            total_years = max(total_years, years)
+    
+    # If no explicit mention, try to calculate from work history
+    if total_years == 0:
+        date_pattern = r'\b(19|20)\d{2}\b'
+        years = sorted([int(year) for year in re.findall(date_pattern, text)])
+        if len(years) >= 2:
+            total_years = max(years[-1] - years[0], 0)
+    
+    return total_years
 
 def extract_skills(text):
     import re
