@@ -29,7 +29,16 @@
                         <h5>Job Matches:</h5>
                         {% for match in resume.resumematch_set.all|dictsort:"score" reversed %}
                         <div class="job-match">
-                            <h6>{{ match.job.title }} - {{ match.score|floatformat:1 }}% Match</h6>
+                            <div class="job-match-header">
+                                <h6>{{ match.job.title }} - {{ match.score|floatformat:1 }}% Match</h6>
+                                <button class="favorite-btn" data-job-id="{{ match.job.id }}">
+                                    {% if match.job.id in user_favorites %}
+                                        ★ Remove from Favorites
+                                    {% else %}
+                                        ☆ Add to Favorites
+                                    {% endif %}
+                                </button>
+                            </div>
                             <p><strong>Location:</strong> {{ match.job.location }}</p>
                             <p><strong>Matched Skills:</strong> {{ match.matched_skills }}</p>
                         </div>
@@ -54,8 +63,39 @@
             border: 1px solid #ddd;
             border-radius: 5px;
         }
+        .job-match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
         .job-match h6 {
-            margin: 0 0 10px 0;
+            margin: 0;
+        }
+        .favorite-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #ffd700;
+            font-size: 1.2em;
         }
     </style>
+
+    <script>
+        document.querySelectorAll('.favorite-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const jobId = button.dataset.jobId;
+                const response = await fetch(`/accounts/jobs/${jobId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    button.textContent = data.status === 'added' ? '★ Remove from Favorites' : '☆ Add to Favorites';
+                }
+            });
+        });
+    </script>
 {% endblock %}

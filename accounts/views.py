@@ -50,6 +50,7 @@ import magic
 
 @login_required
 def profile(request):
+    user_favorites = FavoriteJob.objects.filter(user=request.user).values_list('job_id', flat=True)
     if request.method == 'POST' and request.FILES.get('resume'):
         file = request.FILES['resume']
         
@@ -103,7 +104,10 @@ def profile(request):
         return redirect('profile')
     
     resumes = Resume.objects.filter(user=request.user).order_by('-uploaded_at')
-    return render(request, 'accounts/profile.html', {'resumes': resumes})
+    return render(request, 'accounts/profile.html', {
+        'resumes': resumes,
+        'user_favorites': user_favorites
+    })
 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
