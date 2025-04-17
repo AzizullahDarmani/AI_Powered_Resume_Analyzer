@@ -405,7 +405,6 @@ def toggle_favorite(request, job_id):
 
 @login_required
 def clear_matches(request):
-    Resume.objects.filter(user=request.user).update(skills='', experience='', education='')
-    ResumeMatch.objects.filter(resume__user=request.user).delete()
+    Resume.objects.filter(user=request.user).delete()
     messages.success(request, 'CV analysis and matches cleared successfully!')
     return redirect('profile')
