@@ -20,17 +20,44 @@
                 <p><strong>Description:</strong></p>
                 <p>{{ job.description }}</p>
                 
-                {% if user.is_authenticated and job.user_matches %}
-                    {% for match in job.user_matches %}
-                    <div class="match-info">
-                        <p><strong>Your Match Score:</strong> {{ match.score|floatformat:1 }}%</p>
-                        <p><strong>Matched Skills:</strong> {{ match.matched_skills }}</p>
-                    </div>
-                    {% endfor %}
+                {% if user.is_authenticated %}
+                    {% if job.user_matches %}
+                        {% for match in job.user_matches %}
+                        <div class="match-info">
+                            <p><strong>Your Match Score:</strong> {{ match.score|floatformat:1 }}%</p>
+                            <p><strong>Matched Skills:</strong> {{ match.matched_skills }}</p>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                    <button class="btn favorite-btn" data-job-id="{{ job.id }}">
+                        {% if job.is_favorited %}
+                            ★ Remove from Favorites
+                        {% else %}
+                            ☆ Add to Favorites
+                        {% endif %}
+                    </button>
                 {% endif %}
             </div>
         {% endfor %}
     </div>
+
+    <script>
+        document.querySelectorAll('.favorite-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const jobId = button.dataset.jobId;
+                const response = await fetch(`/jobs/${jobId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    button.textContent = data.status === 'added' ? '★ Remove from Favorites' : '☆ Add to Favorites';
+                }
+            });
+        });
+    </script>
 
     <style>
         .jobs-list {

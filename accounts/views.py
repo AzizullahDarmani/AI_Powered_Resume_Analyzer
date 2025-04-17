@@ -6,8 +6,10 @@ nltk.download('stopwords')
 nltk.download('wordnet')
 
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
@@ -383,7 +385,29 @@ def jobs_list(request):
     jobs = Job.objects.all().order_by('-created_at')
     if request.user.is_authenticated:
         user_resumes = Resume.objects.filter(user=request.user)
+        user_favorites = FavoriteJob.objects.filter(user=request.user).values_list('job_id', flat=True)
         for job in jobs:
             matches = ResumeMatch.objects.filter(job=job, resume__in=user_resumes)
             job.user_matches = matches
+            job.is_favorited = job.id in user_favorites
     return render(request, 'accounts/jobs.html', {'jobs': jobs})
+@login_required
+def favorite_jobs(request):
+    favorites = FavoriteJob.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'accounts/favorite_jobs.html', {'favorites': favorites})
+
+@login_required
+@require_POST
+def toggle_favorite(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    favorite, created = FavoriteJob.objects.get_or_create(user=request.user, job=job)
+    if not created:
+        favorite.delete()
+    return JsonResponse({'status': 'added' if created else 'removed'})
+
+@login_required
+def clear_matches(request):
+    Resume.objects.filter(user=request.user).update(skills='', experience='', education='')
+    ResumeMatch.objects.filter(resume__user=request.user).delete()
+    messages.success(request, 'CV analysis and matches cleared successfully!')
+    return redirect('profile')

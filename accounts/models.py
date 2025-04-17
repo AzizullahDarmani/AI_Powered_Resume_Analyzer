@@ -26,6 +26,17 @@ class ResumeMatch(models.Model):
     def __str__(self):
         return f"{self.resume} - {self.job} ({self.score}%)"
 
+class FavoriteJob(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'job')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.job.title}"
+
 class Resume(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to='resumes/')

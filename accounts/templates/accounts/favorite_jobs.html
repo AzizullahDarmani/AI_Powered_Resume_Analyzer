@@ -1,0 +1,55 @@
+
+{% extends "accounts/base.html" %}
+{% block content %}
+    <h2>Favorite Jobs</h2>
+    <div class="jobs-list">
+        {% for favorite in favorites %}
+            <div class="job-card">
+                <h3>{{ favorite.job.title }}</h3>
+                <p><strong>Location:</strong> {{ favorite.job.location }}</p>
+                <p><strong>Required Experience:</strong> {{ favorite.job.experience_years }} years</p>
+                <p><strong>Required Skills:</strong></p>
+                <p>{{ favorite.job.required_skills }}</p>
+                <p><strong>Description:</strong></p>
+                <p>{{ favorite.job.description }}</p>
+                <button class="btn btn-danger favorite-btn" data-job-id="{{ favorite.job.id }}">
+                    Remove from Favorites
+                </button>
+            </div>
+        {% empty %}
+            <p>You haven't added any jobs to your favorites yet.</p>
+        {% endfor %}
+    </div>
+
+    <style>
+        .jobs-list {
+            margin-top: 20px;
+        }
+        .job-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .btn-danger {
+            background-color: #dc3545;
+        }
+    </style>
+
+    <script>
+        document.querySelectorAll('.favorite-btn').forEach(button => {
+            button.addEventListener('click', async () => {
+                const jobId = button.dataset.jobId;
+                const response = await fetch(`/jobs/${jobId}/toggle-favorite/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                });
+                if (response.ok) {
+                    button.closest('.job-card').remove();
+                }
+            });
+        });
+    </script>
+{% endblock %}
