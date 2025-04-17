@@ -1,9 +1,7 @@
 
 # Download required NLTK data
 import nltk
-nltk.download('punkt')
-nltk.download('stopwords')
-nltk.download('wordnet')
+nltk.download(['punkt', 'stopwords', 'wordnet', 'punkt_tab'])
 
 
 from django.shortcuts import render, redirect, get_object_or_404
