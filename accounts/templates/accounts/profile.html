@@ -1,7 +1,33 @@
-
 {% extends "accounts/base.html" %}
 {% block content %}
     <h2>Profile</h2>
     <p>Welcome, {{ user.username }}!</p>
-    <p>Email: {{ user.email }}</p>
+
+    <div class="resume-upload">
+        <h3>Upload Resume</h3>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="file" name="resume" accept=".pdf,.docx" required>
+            <button type="submit" class="btn">Upload and Analyze</button>
+        </form>
+    </div>
+
+    {% if resumes %}
+        <div class="resumes">
+            <h3>Your Resumes</h3>
+            {% for resume in resumes %}
+                <div class="resume-card">
+                    <h4>Resume uploaded on {{ resume.uploaded_at|date:"M d, Y" }}</h4>
+                    <div class="analysis">
+                        <h5>Skills:</h5>
+                        <p>{{ resume.skills }}</p>
+                        <h5>Experience:</h5>
+                        <p>{{ resume.experience }}</p>
+                        <h5>Education:</h5>
+                        <p>{{ resume.education }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
 {% endblock %}
