@@ -136,8 +136,8 @@ def calculate_resume_job_match(resume_text, job):
         stop_words='english',
         ngram_range=(1, 2),  # Consider both unigrams and bigrams
         max_features=5000,
-        min_df=2,
-        max_df=0.95
+        min_df=1,  # At least 1 document
+        max_df=1.0  # Allow terms to appear in all documents
     )
     
     # Create document matrix
