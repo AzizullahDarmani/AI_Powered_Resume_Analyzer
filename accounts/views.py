@@ -79,11 +79,52 @@ def profile(request):
         resume.education = education
         resume.save()
         
+        # Match resume with all available jobs
+        jobs = Job.objects.all()
+        for job in jobs:
+            score, matched_skills = calculate_resume_job_match(text, job)
+            ResumeMatch.objects.update_or_create(
+                resume=resume,
+                job=job,
+                defaults={
+                    'score': score,
+                    'matched_skills': matched_skills
+                }
+            )
+        
         messages.success(request, 'Resume uploaded and processed successfully!')
         return redirect('profile')
     
     resumes = Resume.objects.filter(user=request.user).order_by('-uploaded_at')
     return render(request, 'accounts/profile.html', {'resumes': resumes})
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+
+def calculate_resume_job_match(resume_text, job):
+    # Create TF-IDF vectorizer
+    vectorizer = TfidfVectorizer(stop_words='english')
+    
+    # Combine required skills with job description
+    job_text = f"{job.description} {job.required_skills}"
+    
+    # Create document matrix
+    documents = [resume_text, job_text]
+    tfidf_matrix = vectorizer.fit_transform(documents)
+    
+    # Calculate cosine similarity
+    similarity = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    
+    # Convert to percentage
+    match_score = similarity * 100
+    
+    # Extract matched skills
+    resume_skills = set(extract_skills(resume_text).lower().split(', '))
+    job_skills = set(job.required_skills.lower().split(', '))
+    matched_skills = resume_skills.intersection(job_skills)
+    
+    return match_score, ', '.join(matched_skills)
 
 def extract_skills(text):
     import re

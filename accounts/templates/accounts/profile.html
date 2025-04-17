@@ -25,9 +25,30 @@
                         <p>{{ resume.experience }}</p>
                         <h5>Education:</h5>
                         <p>{{ resume.education }}</p>
+                        
+                        <h5>Job Matches:</h5>
+                        {% for match in resume.resumematch_set.all|dictsort:"score" reversed %}
+                        <div class="job-match">
+                            <h6>{{ match.job.title }} - {{ match.score|floatformat:1 }}% Match</h6>
+                            <p><strong>Location:</strong> {{ match.job.location }}</p>
+                            <p><strong>Matched Skills:</strong> {{ match.matched_skills }}</p>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             {% endfor %}
         </div>
     {% endif %}
+
+    <style>
+        .job-match {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .job-match h6 {
+            margin: 0 0 10px 0;
+        }
+    </style>
 {% endblock %}
