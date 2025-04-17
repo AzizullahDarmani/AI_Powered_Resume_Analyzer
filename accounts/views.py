@@ -86,67 +86,159 @@ def profile(request):
     return render(request, 'accounts/profile.html', {'resumes': resumes})
 
 def extract_skills(text):
-    # More comprehensive list of technical skills
-    technical_skills = [
-        'python', 'java', 'javascript', 'html', 'css', 'react', 'django',
-        'sql', 'postgresql', 'mysql', 'mongodb', 'docker', 'kubernetes',
-        'aws', 'azure', 'git', 'nodejs', 'express', 'flask', 'spring',
-        'typescript', 'angular', 'vue', 'php', 'laravel', 'ruby', 'rails'
-    ]
+    import re
     
-    # Soft skills
-    soft_skills = [
-        'leadership', 'communication', 'teamwork', 'problem solving',
-        'analytical', 'project management', 'time management',
-        'critical thinking', 'creativity', 'collaboration'
-    ]
+    # Expanded technical skills with categories
+    skill_categories = {
+        'Programming Languages': [
+            'python', 'java', 'javascript', 'typescript', 'c\\+\\+', 'ruby', 'php',
+            'scala', 'kotlin', 'swift', 'rust', 'go', 'perl', 'r'
+        ],
+        'Web Technologies': [
+            'html', 'css', 'react', 'angular', 'vue', 'django', 'flask',
+            'node\\.?js', 'express', 'spring', 'laravel', 'bootstrap',
+            'jquery', 'webpack', 'sass', 'less'
+        ],
+        'Databases': [
+            'sql', 'postgresql', 'mysql', 'mongodb', 'redis', 'elasticsearch',
+            'cassandra', 'oracle', 'sqlite', 'graphql', 'firebase'
+        ],
+        'DevOps & Tools': [
+            'git', 'docker', 'kubernetes', 'jenkins', 'aws', 'azure',
+            'gcp', 'terraform', 'ansible', 'circleci', 'travis'
+        ],
+        'Soft Skills': [
+            'leadership', 'communication', 'teamwork', 'problem[- ]solving',
+            'analytical', 'project management', 'time management',
+            'critical thinking', 'creativity', 'collaboration'
+        ]
+    }
     
-    found_tech_skills = [skill for skill in technical_skills if skill.lower() in text.lower()]
-    found_soft_skills = [skill for skill in soft_skills if skill.lower() in text.lower()]
+    found_skills = {}
+    for category, skills in skill_categories.items():
+        pattern = '|'.join(f"\\b{skill}\\b" for skill in skills)
+        matches = re.finditer(pattern, text.lower())
+        found = sorted(set(match.group() for match in matches))
+        if found:
+            found_skills[category] = found
     
-    all_skills = found_tech_skills + found_soft_skills
-    return ", ".join(all_skills) if all_skills else "No specific skills detected"
+    # Format the output
+    output = []
+    for category, skills in found_skills.items():
+        output.append(f"{category}: {', '.join(skills)}")
+    
+    return "\n".join(output) if output else "No specific skills detected"
 
 def extract_experience(text):
-    # Look for common experience patterns
     import re
+    from datetime import datetime
     
-    # Look for date patterns and job titles
-    experience_patterns = [
-        r'\b(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}|present|current\b',
-        r'\b(senior|junior|lead|principal|software|developer|engineer|manager|director)\b'
+    # Enhanced patterns for experience extraction
+    job_title_pattern = r'\b(senior|junior|lead|principal|software|developer|engineer|manager|director|intern|consultant|architect|analyst|specialist)\b'
+    company_patterns = [
+        r'at\s+([A-Z][A-Za-z0-9\s&]+(?:Inc\.|LLC|Ltd\.?|GmbH|Corp\.?|Limited|Company)?)',
+        r'([A-Z][A-Za-z0-9\s&]+(?:Inc\.|LLC|Ltd\.?|GmbH|Corp\.?|Limited|Company)?)\s*[-–]\s*(?:' + job_title_pattern + ')',
     ]
+    date_pattern = r'\b(?:(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.?\s*)?(?:19|20)\d{2}\b'
     
     experiences = []
-    for pattern in experience_patterns:
-        matches = re.finditer(pattern, text, re.IGNORECASE)
-        for match in matches:
-            # Get the surrounding context (100 characters)
-            start = max(0, match.start() - 50)
-            end = min(len(text), match.end() + 50)
-            context = text[start:end].strip()
-            experiences.append(context)
     
-    return "\n".join(experiences) if experiences else "No specific experience detected"
+    # Find job titles with surrounding context
+    for match in re.finditer(job_title_pattern, text, re.IGNORECASE):
+        # Get larger context (200 characters)
+        start = max(0, match.start() - 100)
+        end = min(len(text), match.end() + 100)
+        context = text[start:end].strip()
+        
+        # Look for dates in the context
+        dates = re.findall(date_pattern, context)
+        # Look for company names
+        company = None
+        for pattern in company_patterns:
+            company_match = re.search(pattern, context)
+            if company_match:
+                company = company_match.group(1)
+                break
+        
+        experience = {
+            'title': match.group(),
+            'company': company,
+            'dates': dates,
+            'context': context
+        }
+        experiences.append(experience)
+    
+    # Format the output
+    formatted_experiences = []
+    for exp in experiences:
+        entry = []
+        if exp['title']:
+            entry.append(f"Position: {exp['title'].title()}")
+        if exp['company']:
+            entry.append(f"Company: {exp['company'].strip()}")
+        if exp['dates']:
+            entry.append(f"Period: {' - '.join(exp['dates'])}")
+        entry.append(f"Details: {exp['context']}")
+        formatted_experiences.append("\n".join(entry))
+    
+    return "\n\n".join(formatted_experiences) if formatted_experiences else "No specific experience detected"
 
 def extract_education(text):
-    # Look for education-related keywords
     import re
     
-    education_patterns = [
-        r'\b(bachelor|master|phd|bsc|msc|ba|bs|ma|ms|doctorate|degree)\b',
-        r'\b(university|college|institute|school)\b',
-        r'\b(19|20)\d{2}\s*[-–]\s*(19|20)\d{2}|present|current\b'
-    ]
+    # Enhanced patterns for education extraction
+    education_patterns = {
+        'degree': r'\b(Bachelor|Master|PhD|BSc|MSc|BA|BS|MA|MS|Doctorate|Associate)\s*(?:of|in|\'s)?\s*(?:Science|Arts|Engineering|Business|[A-Za-z]+)?\b',
+        'field': r'\b(Computer Science|Information Technology|Software Engineering|Business Administration|Data Science|Mathematics|Physics|Engineering)\b',
+        'university': r'\b([A-Z][A-Za-z\s&]+(?:University|College|Institute|School|Academy))\b',
+        'year': r'\b(19|20)\d{2}\b'
+    }
     
-    education = []
-    for pattern in education_patterns:
-        matches = re.finditer(pattern, text, re.IGNORECASE)
-        for match in matches:
-            # Get the surrounding context (100 characters)
-            start = max(0, match.start() - 50)
-            end = min(len(text), match.end() + 50)
-            context = text[start:end].strip()
-            education.append(context)
+    education_entries = []
     
-    return "\n".join(education) if education else "No specific education detected"
+    # Find education entries
+    for match in re.finditer(education_patterns['university'], text):
+        # Get context (200 characters)
+        start = max(0, match.start() - 100)
+        end = min(len(text), match.end() + 100)
+        context = text[start:end]
+        
+        entry = {
+            'university': match.group(),
+            'degree': None,
+            'field': None,
+            'year': None,
+            'context': context
+        }
+        
+        # Look for other components in the context
+        degree_match = re.search(education_patterns['degree'], context)
+        if degree_match:
+            entry['degree'] = degree_match.group()
+            
+        field_match = re.search(education_patterns['field'], context)
+        if field_match:
+            entry['field'] = field_match.group()
+            
+        years = re.findall(education_patterns['year'], context)
+        if years:
+            entry['year'] = years
+            
+        education_entries.append(entry)
+    
+    # Format the output
+    formatted_education = []
+    for edu in education_entries:
+        entry = []
+        if edu['university']:
+            entry.append(f"Institution: {edu['university']}")
+        if edu['degree']:
+            entry.append(f"Degree: {edu['degree']}")
+        if edu['field']:
+            entry.append(f"Field: {edu['field']}")
+        if edu['year']:
+            entry.append(f"Year(s): {', '.join(edu['year'])}")
+        entry.append(f"Details: {edu['context']}")
+        formatted_education.append("\n".join(entry))
+    
+    return "\n\n".join(formatted_education) if formatted_education else "No specific education detected"
