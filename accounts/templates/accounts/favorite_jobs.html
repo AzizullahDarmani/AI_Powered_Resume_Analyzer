@@ -40,7 +40,7 @@
         document.querySelectorAll('.favorite-btn').forEach(button => {
             button.addEventListener('click', async () => {
                 const jobId = button.dataset.jobId;
-                const response = await fetch(`/jobs/${jobId}/toggle-favorite/`, {
+                const response = await fetch(`/accounts/jobs/${jobId}/toggle-favorite/`, {
                     method: 'POST',
                     headers: {
                         'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
