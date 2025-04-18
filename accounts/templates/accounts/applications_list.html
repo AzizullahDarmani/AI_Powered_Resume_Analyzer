@@ -5,7 +5,7 @@
     <div class="applications-list">
         {% for application in applications %}
             <div class="application-card">
-                <h3>{{ application.job.title }}</h3>
+                <h3>Application for: {{ application.job.title }}</h3>
                 <p><strong>Applicant:</strong> {{ application.full_name }}</p>
                 <p><strong>Contact:</strong> {{ application.contact_number }}</p>
                 <p><strong>{{ application.experience }} years Experience</strong></p>
