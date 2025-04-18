@@ -1,6 +1,6 @@
 
 from django import forms
-from .models import Job
+from .models import Job, JobApplication
 
 class JobForm(forms.ModelForm):
     class Meta:
