@@ -9,7 +9,7 @@ from typing import List
 class ResumeValidation(BaseModel):
     skills: List[str] = Field(..., min_items=1)
     experience_years: int = Field(..., ge=0)
-    education_level: str = Field(..., regex='^(High School|Bachelor|Master|PhD)$')
+    education_level: str = Field(..., pattern='^(High School|Bachelor|Master|PhD)$')
 
 # Marshmallow schema for resume validation
 class ResumeValidationSchema(Schema):
