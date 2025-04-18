@@ -557,3 +557,12 @@ def delete_application(request, application_id):
     application.delete()
     messages.success(request, 'Application deleted successfully!')
     return redirect('applications_list')
+
+@login_required
+def delete_job(request, job_id):
+    if not request.user.is_superuser:
+        return redirect('jobs')
+    job = get_object_or_404(Job, id=job_id)
+    job.delete()
+    messages.success(request, 'Job deleted successfully!')
+    return redirect('jobs')

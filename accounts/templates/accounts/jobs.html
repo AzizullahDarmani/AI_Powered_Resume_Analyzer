@@ -12,7 +12,15 @@
     <div class="jobs-list">
         {% for job in jobs %}
             <div class="job-card">
-                <h3>{{ job.title }}</h3>
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <h3>{{ job.title }}</h3>
+                    {% if user.is_superuser %}
+                    <form method="POST" action="{% url 'delete_job' job.id %}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this job?');">
+                        {% csrf_token %}
+                        <button type="submit" class="delete-icon" title="Delete Job">✖</button>
+                    </form>
+                    {% endif %}
+                </div>
                 <p><strong>Location:</strong> {{ job.location }}</p>
                 <p><strong>Required Experience:</strong> {{ job.experience_years }} years</p>
                 <p><strong>Required Skills:</strong></p>
@@ -80,6 +88,17 @@
         }
         .admin-actions {
             margin-bottom: 20px;
+        }
+        .delete-icon {
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: black;
+            cursor: pointer;
+            padding: 0 5px;
+        }
+        .delete-icon:hover {
+            opacity: 0.7;
         }
     </style>
 {% endblock %}
