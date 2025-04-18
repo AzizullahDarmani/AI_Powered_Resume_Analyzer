@@ -1,9 +1,18 @@
 
-from django.urls import path
+from django.urls import path, include
 from django.contrib.auth import views as auth_views
-from . import views
+from rest_framework.routers import DefaultRouter
+from . import views, api
+
+router = DefaultRouter()
+router.register(r'resumes', api.ResumeViewSet, basename='resume')
+router.register(r'jobs', api.JobViewSet)
+router.register(r'matches', api.ResumeMatchViewSet, basename='match')
+router.register(r'favorites', api.FavoriteJobViewSet, basename='favorite')
 
 urlpatterns = [
+    path('api/', include(router.urls)),
+    path('api/validate-resume/', api.validate_resume, name='validate-resume'),
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='accounts/logout.html', next_page='login'), name='logout'),

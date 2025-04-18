@@ -12,6 +12,9 @@ python-docx = "^1.1.2"
 scikit-learn = "^1.6.1"
 numpy = "^2.2.4"
 nltk = "^3.9.1"
+pydantic = "^2.11.3"
+marshmallow = "^4.0.0"
+djangorestframework = "^3.16.0"
 [tool.poetry.dev-dependencies]
 
 [tool.pyright]
