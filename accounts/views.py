@@ -411,7 +411,6 @@ def toggle_favorite(request, job_id):
         favorite.delete()
     return JsonResponse({'status': 'added' if created else 'removed'})
 
-@login_required
 def generate_skills_feedback(skills, jobs):
     common_job_skills = set()
     for job in jobs:
