@@ -413,69 +413,123 @@ def toggle_favorite(request, job_id):
 
 def generate_skills_feedback(skills, jobs):
     common_job_skills = set()
+    skill_frequency = {}
+    
+    # Analyze required skills across all jobs
     for job in jobs:
-        common_job_skills.update(skill.strip().lower() for skill in job.required_skills.split(','))
+        job_skills = [skill.strip().lower() for skill in job.required_skills.split(',')]
+        common_job_skills.update(job_skills)
+        for skill in job_skills:
+            skill_frequency[skill] = skill_frequency.get(skill, 0) + 1
 
+    # Get user's skills
     user_skills = set()
     for category in skills.split('\n'):
         if ':' in category:
             skills_list = category.split(':')[1].strip().lower()
             user_skills.update(skill.strip() for skill in skills_list.split(','))
 
+    # Analyze gaps and trends
     missing_skills = common_job_skills - user_skills
+    most_demanded = sorted(skill_frequency.items(), key=lambda x: x[1], reverse=True)
     feedback = []
 
     if missing_skills:
-        feedback.append("Consider developing these in-demand skills:")
-        feedback.extend(f"• {skill}" for skill in sorted(missing_skills)[:5])
-    else:
-        feedback.append("Your skill set aligns well with current job requirements.")
+        feedback.append("Priority Skills to Develop:")
+        top_missing = sorted([(skill, skill_frequency[skill]) for skill in missing_skills], 
+                           key=lambda x: x[1], reverse=True)[:5]
+        feedback.extend(f"• {skill} (demanded in {count} jobs)" for skill, count in top_missing)
+        
+    feedback.append("\nCurrent Market Trends:")
+    feedback.extend(f"• {skill} is highly sought after ({count} job listings)"
+                   for skill, count in most_demanded[:3])
+
+    if user_skills:
+        feedback.append("\nYour Strengths:")
+        feedback.extend(f"• {skill} (matches market demand)"
+                       for skill in user_skills if skill in common_job_skills)
 
     return "\n".join(feedback)
 
 def generate_format_feedback(text):
     feedback = []
-
-    # Length check
+    
+    # Content structure analysis
+    sections = {
+        'summary': ['professional summary', 'profile', 'objective'],
+        'experience': ['work experience', 'employment history'],
+        'education': ['education', 'academic background'],
+        'skills': ['technical skills', 'core competencies'],
+        'projects': ['projects', 'portfolio'],
+        'achievements': ['achievements', 'accomplishments']
+    }
+    
+    found_sections = {}
+    for section, keywords in sections.items():
+        found_sections[section] = any(keyword in text.lower() for keyword in keywords)
+    
+    feedback.append("Structure Analysis:")
+    for section, found in found_sections.items():
+        if not found:
+            feedback.append(f"• Add a {section.title()} section to strengthen your resume")
+            
+    # Length and readability
     words = len(text.split())
     if words < 300:
-        feedback.append("• Consider adding more detail - resume seems brief")
+        feedback.append("\nContent Length:")
+        feedback.append("• Your resume is too brief (under 300 words)")
+        feedback.append("• Add more specific achievements and responsibilities")
     elif words > 1000:
-        feedback.append("• Resume may be too lengthy - consider condensing")
+        feedback.append("\nContent Length:")
+        feedback.append("• Consider condensing your resume (over 1000 words)")
+        feedback.append("• Focus on most relevant and recent experiences")
 
-    # Section headers check
-    common_headers = ['experience', 'education', 'skills', 'projects']
-    found_headers = sum(1 for header in common_headers if header.lower() in text.lower())
-    if found_headers < len(common_headers):
-        feedback.append("• Include clear section headers for Experience, Education, Skills, and Projects")
+    # Professional presentation
+    contact_elements = {
+        'email': ['@'],
+        'phone': [r'\d{3}[-.)]\d{3}[-.)]\d{4}'],
+        'linkedin': ['linkedin.com'],
+        'portfolio': ['github.com', 'portfolio']
+    }
+    
+    feedback.append("\nProfessional Presence:")
+    for element, patterns in contact_elements.items():
+        if not any(pattern in text.lower() for pattern in patterns):
+            feedback.append(f"• Add your {element} to enhance professional accessibility")
 
-    # Contact information check
-    contact_patterns = ['@', 'linkedin', 'github', 'phone']
-    if not any(pattern in text.lower() for pattern in contact_patterns):
-        feedback.append("• Add professional contact information including email and LinkedIn")
-
-    return "\n".join(feedback) if feedback else "Resume format follows good practices"
+    return "\n".join(feedback)
 
 def generate_ats_feedback(text):
     feedback = []
-
-    # Check for common ATS issues
-    if any(char in text for char in ['•', '►', '→']):
-        feedback.append("• Replace special bullets with standard dots for better ATS compatibility")
-
-    # Check for potential formatting issues
+    
+    # ATS optimization checks
+    feedback.append("ATS Optimization Recommendations:")
+    
+    # Format and characters
+    if any(char in text for char in ['•', '►', '→', '❖', '◆', '★']):
+        feedback.append("• Replace fancy bullets with standard hyphens (-) or asterisks (*)")
+    
     if text.count('\t') > 5:
-        feedback.append("• Minimize use of tabs - they may not parse correctly in ATS")
-
+        feedback.append("• Remove tabs and use consistent spacing")
+        
     if text.count('  ') > 10:
-        feedback.append("• Avoid multiple spaces - use single spaces for better parsing")
+        feedback.append("• Eliminate double spaces - use single spacing throughout")
 
-    # File format recommendation
-    feedback.append("• Submit in PDF format to preserve formatting across different ATS systems")
-
-    # Keywords recommendation
-    feedback.append("• Include job-specific keywords from the job description")
-
+    # File format
+    feedback.append("• Use a clean PDF format with standard fonts (Arial, Calibri, Times New Roman)")
+    
+    # Headers and sections
+    feedback.append("\nContent Structure for ATS:")
+    feedback.append("• Use standard section headers (e.g., 'Work Experience' not 'Career Journey')")
+    feedback.append("• Place company names before job titles")
+    feedback.append("• Include dates in MM/YYYY format")
+    
+    # Keywords optimization
+    feedback.append("\nKeyword Optimization:")
+    feedback.append("• Mirror key terms from job descriptions")
+    feedback.append("• Spell out abbreviations at least once")
+    feedback.append("• Include both full and abbreviated versions of technical terms")
+    
     return "\n".join(feedback)
 
 def clear_matches(request):
