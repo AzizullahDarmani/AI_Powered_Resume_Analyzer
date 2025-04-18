@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail
 from django.contrib.auth.models import User
 from django.contrib import messages
-from .models import Resume, Job, ResumeMatch, FavoriteJob
+from .models import Resume, Job, ResumeMatch, FavoriteJob, JobApplication
 
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
