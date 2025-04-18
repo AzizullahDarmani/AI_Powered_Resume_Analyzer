@@ -371,7 +371,7 @@ def extract_education(text):
         formatted_education.append("\n".join(entry))
 
     return "\n\n".join(formatted_education) if formatted_education else "No specific education detected"
-from .forms import JobForm
+from .forms import JobForm, JobApplicationForm
 
 def add_job(request):
     if not request.user.is_superuser:
