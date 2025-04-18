@@ -85,6 +85,11 @@ def profile(request):
         resume.skills = skills
         resume.experience = experience
         resume.education = education
+        
+        # Generate feedback
+        resume.skills_feedback = generate_skills_feedback(skills, Job.objects.all())
+        resume.format_feedback = generate_format_feedback(text)
+        resume.ats_feedback = generate_ats_feedback(text)
         resume.save()
         
         # Match resume with all available jobs
@@ -408,6 +413,73 @@ def toggle_favorite(request, job_id):
     return JsonResponse({'status': 'added' if created else 'removed'})
 
 @login_required
+def generate_skills_feedback(skills, jobs):
+    common_job_skills = set()
+    for job in jobs:
+        common_job_skills.update(skill.strip().lower() for skill in job.required_skills.split(','))
+    
+    user_skills = set()
+    for category in skills.split('\n'):
+        if ':' in category:
+            skills_list = category.split(':')[1].strip().lower()
+            user_skills.update(skill.strip() for skill in skills_list.split(','))
+    
+    missing_skills = common_job_skills - user_skills
+    feedback = []
+    
+    if missing_skills:
+        feedback.append("Consider developing these in-demand skills:")
+        feedback.extend(f"• {skill}" for skill in sorted(missing_skills)[:5])
+    else:
+        feedback.append("Your skill set aligns well with current job requirements.")
+    
+    return "\n".join(feedback)
+
+def generate_format_feedback(text):
+    feedback = []
+    
+    # Length check
+    words = len(text.split())
+    if words < 300:
+        feedback.append("• Consider adding more detail - resume seems brief")
+    elif words > 1000:
+        feedback.append("• Resume may be too lengthy - consider condensing")
+        
+    # Section headers check
+    common_headers = ['experience', 'education', 'skills', 'projects']
+    found_headers = sum(1 for header in common_headers if header.lower() in text.lower())
+    if found_headers < len(common_headers):
+        feedback.append("• Include clear section headers for Experience, Education, Skills, and Projects")
+    
+    # Contact information check
+    contact_patterns = ['@', 'linkedin', 'github', 'phone']
+    if not any(pattern in text.lower() for pattern in contact_patterns):
+        feedback.append("• Add professional contact information including email and LinkedIn")
+    
+    return "\n".join(feedback) if feedback else "Resume format follows good practices"
+
+def generate_ats_feedback(text):
+    feedback = []
+    
+    # Check for common ATS issues
+    if any(char in text for char in ['•', '►', '→']):
+        feedback.append("• Replace special bullets with standard dots for better ATS compatibility")
+    
+    # Check for potential formatting issues
+    if text.count('\t') > 5:
+        feedback.append("• Minimize use of tabs - they may not parse correctly in ATS")
+    
+    if text.count('  ') > 10:
+        feedback.append("• Avoid multiple spaces - use single spaces for better parsing")
+    
+    # File format recommendation
+    feedback.append("• Submit in PDF format to preserve formatting across different ATS systems")
+    
+    # Keywords recommendation
+    feedback.append("• Include job-specific keywords from the job description")
+    
+    return "\n".join(feedback)
+
 def clear_matches(request):
     Resume.objects.filter(user=request.user).delete()
     messages.success(request, 'CV analysis and matches cleared successfully!')

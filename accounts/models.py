@@ -44,6 +44,9 @@ class Resume(models.Model):
     skills = models.TextField(blank=True)
     experience = models.TextField(blank=True)
     education = models.TextField(blank=True)
+    skills_feedback = models.TextField(blank=True)
+    format_feedback = models.TextField(blank=True)
+    ats_feedback = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s resume"
