@@ -1,9 +1,14 @@
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from . import views, api # api.py needs to be created
 
-from django.urls import path
-from django.contrib.auth import views as auth_views
-from . import views
+router = DefaultRouter()
+router.register(r'resumes', api.ResumeViewSet, basename='resume') # ResumeViewSet needs to be defined in api.py
+router.register(r'jobs', api.JobViewSet, basename='job') # JobViewSet needs to be defined in api.py
 
 urlpatterns = [
+    path('api/', include(router.urls)),
+    path('api/matches/', api.get_resume_matches, name='resume-matches'), # get_resume_matches needs to be defined in api.py
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='accounts/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(template_name='accounts/logout.html', next_page='login'), name='logout'),
