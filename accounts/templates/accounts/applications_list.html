@@ -8,9 +8,8 @@
                 <h3>{{ application.job.title }}</h3>
                 <p><strong>Applicant:</strong> {{ application.full_name }}</p>
                 <p><strong>Contact:</strong> {{ application.contact_number }}</p>
-                <p><strong>Experience:</strong></p>
-                <p>{{ application.experience }}</p>
-                <p><strong>CV:</strong> <a href="{{ application.cv.url }}" target="_blank" class="btn btn-sm">View CV</a></p>
+                <p><strong>{{ application.experience }} years Experience</strong></p>
+                <p><strong>CV:</strong> <button onclick="window.open('{{ application.cv.url }}', '_blank')" class="view-cv-btn">View CV</button></p>
                 <p><strong>Applied:</strong> {{ application.created_at|date:"F d, Y" }}</p>
             </div>
         {% empty %}
@@ -28,9 +27,17 @@
             margin-bottom: 20px;
             border-radius: 5px;
         }
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 0.9em;
+        .view-cv-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .view-cv-btn:hover {
+            background-color: #0056b3;
         }
     </style>
 {% endblock %}
