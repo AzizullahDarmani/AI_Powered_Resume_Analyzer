@@ -1,0 +1,56 @@
+
+{% extends "accounts/base.html" %}
+{% block content %}
+    <h2>Apply for {{ job.title }}</h2>
+    <div class="job-details">
+        <p><strong>Location:</strong> {{ job.location }}</p>
+        <p><strong>Required Experience:</strong> {{ job.experience_years }} years</p>
+        <p><strong>Required Skills:</strong> {{ job.required_skills }}</p>
+    </div>
+
+    <form method="post" enctype="multipart/form-data" class="application-form">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div class="error">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn">Submit Application</button>
+        <a href="{% url 'jobs' %}" class="btn" style="background-color: #6c757d;">Cancel</a>
+    </form>
+
+    <style>
+        .job-details {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .application-form {
+            max-width: 600px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+    </style>
+{% endblock %}

@@ -22,6 +22,8 @@ urlpatterns = [
     path('favorites/', views.favorite_jobs, name='favorite_jobs'),
     path('jobs/<int:job_id>/toggle-favorite/', views.toggle_favorite, name='toggle_favorite'),
     path('clear-matches/', views.clear_matches, name='clear_matches'),
+    path('jobs/<int:job_id>/apply/', views.apply_job, name='apply_job'),
+    path('applications/', views.applications_list, name='applications_list'),
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(template_name='accounts/password_reset.html'),
          name='password_reset'),

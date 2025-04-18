@@ -29,13 +29,16 @@
                         </div>
                         {% endfor %}
                     {% endif %}
-                    <button class="btn favorite-btn" data-job-id="{{ job.id }}">
+                    <div class="job-actions">
+                        <a href="{% url 'apply_job' job.id %}" class="btn btn-primary">Apply Now</a>
+                        <button class="btn favorite-btn" data-job-id="{{ job.id }}">
                         {% if job.is_favorited %}
                             ★ Remove from Favorites
                         {% else %}
                             ☆ Add to Favorites
                         {% endif %}
                     </button>
+                    </div>
                 {% endif %}
             </div>
         {% endfor %}

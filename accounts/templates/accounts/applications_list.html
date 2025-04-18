@@ -1,0 +1,36 @@
+
+{% extends "accounts/base.html" %}
+{% block content %}
+    <h2>Job Applications</h2>
+    <div class="applications-list">
+        {% for application in applications %}
+            <div class="application-card">
+                <h3>{{ application.job.title }}</h3>
+                <p><strong>Applicant:</strong> {{ application.full_name }}</p>
+                <p><strong>Contact:</strong> {{ application.contact_number }}</p>
+                <p><strong>Experience:</strong></p>
+                <p>{{ application.experience }}</p>
+                <p><strong>CV:</strong> <a href="{{ application.cv.url }}" target="_blank" class="btn btn-sm">View CV</a></p>
+                <p><strong>Applied:</strong> {{ application.created_at|date:"F d, Y" }}</p>
+            </div>
+        {% empty %}
+            <p>No applications yet.</p>
+        {% endfor %}
+    </div>
+
+    <style>
+        .applications-list {
+            margin-top: 20px;
+        }
+        .application-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 0.9em;
+        }
+    </style>
+{% endblock %}

@@ -37,6 +37,18 @@ class FavoriteJob(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.job.title}"
 
+class JobApplication(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    job = models.ForeignKey(Job, on_delete=models.CASCADE)
+    full_name = models.CharField(max_length=200)
+    contact_number = models.CharField(max_length=20)
+    experience = models.TextField()
+    cv = models.FileField(upload_to='applications/')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.full_name}'s application for {self.job.title}"
+
 class Resume(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to='resumes/')

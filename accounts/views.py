@@ -521,6 +521,29 @@ def generate_ats_feedback(text):
     
     return "\n".join(sections)
 
+@login_required
+def apply_job(request, job_id):
+    job = get_object_or_404(Job, id=job_id)
+    if request.method == 'POST':
+        form = JobApplicationForm(request.POST, request.FILES)
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.user = request.user
+            application.job = job
+            application.save()
+            messages.success(request, 'Application submitted successfully!')
+            return redirect('jobs')
+    else:
+        form = JobApplicationForm()
+    return render(request, 'accounts/apply_job.html', {'form': form, 'job': job})
+
+@login_required
+def applications_list(request):
+    if not request.user.is_superuser:
+        return redirect('jobs')
+    applications = JobApplication.objects.all().order_by('-created_at')
+    return render(request, 'accounts/applications_list.html', {'applications': applications})
+
 def clear_matches(request):
     Resume.objects.filter(user=request.user).delete()
     messages.success(request, 'CV analysis and matches cleared successfully!')

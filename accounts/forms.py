@@ -10,3 +10,10 @@ class JobForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'rows': 4}),
             'required_skills': forms.Textarea(attrs={'rows': 4}),
         }
+class JobApplicationForm(forms.ModelForm):
+    class Meta:
+        model = JobApplication
+        fields = ['full_name', 'contact_number', 'experience', 'cv']
+        widgets = {
+            'experience': forms.Textarea(attrs={'rows': 4}),
+        }
