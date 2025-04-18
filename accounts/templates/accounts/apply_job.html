@@ -13,12 +13,27 @@
         {% for field in form %}
         <div class="form-group">
             <label>{{ field.label }}</label>
-            {{ field }}
+            {% if field.name == 'cv' %}
+                <label class="custom-file-upload">
+                    <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" accept=".pdf,.doc,.docx">
+                    Choose File
+                </label>
+                <span id="file-chosen">No file chosen</span>
+            {% else %}
+                {{ field }}
+            {% endif %}
             {% if field.errors %}
                 <div class="error">{{ field.errors }}</div>
             {% endif %}
         </div>
         {% endfor %}
+        <script>
+            const fileInput = document.querySelector('input[type="file"]');
+            const fileChosen = document.getElementById('file-chosen');
+            fileInput.addEventListener('change', function() {
+                fileChosen.textContent = this.files[0] ? this.files[0].name : 'No file chosen';
+            });
+        </script>
         <button type="submit" class="btn">Submit Application</button>
         <a href="{% url 'jobs' %}" class="btn" style="background-color: #6c757d;">Cancel</a>
     </form>
@@ -47,10 +62,48 @@
             border: 1px solid #ddd;
             border-radius: 4px;
         }
+        .form-group input[type="file"] {
+            display: none;
+        }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #6C63FF;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .custom-file-upload:hover {
+            background: #5a52d5;
+        }
         .error {
             color: red;
             font-size: 0.9em;
             margin-top: 5px;
+        }
+        .btn {
+            text-decoration: none;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        button.btn {
+            background: #6C63FF;
+            color: white;
+        }
+        button.btn:hover {
+            background: #5a52d5;
+        }
+        a.btn {
+            background: #8c8c8c;
+            color: white;
+        }
+        a.btn:hover {
+            background: #737373;
         }
     </style>
 {% endblock %}
