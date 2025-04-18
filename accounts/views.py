@@ -548,3 +548,12 @@ def clear_matches(request):
     Resume.objects.filter(user=request.user).delete()
     messages.success(request, 'CV analysis and matches cleared successfully!')
     return redirect('profile')
+
+@login_required
+def delete_application(request, application_id):
+    if not request.user.is_superuser:
+        return redirect('jobs')
+    application = get_object_or_404(JobApplication, id=application_id)
+    application.delete()
+    messages.success(request, 'Application deleted successfully!')
+    return redirect('applications_list')

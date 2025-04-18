@@ -24,6 +24,7 @@ urlpatterns = [
     path('clear-matches/', views.clear_matches, name='clear_matches'),
     path('jobs/<int:job_id>/apply/', views.apply_job, name='apply_job'),
     path('applications/', views.applications_list, name='applications_list'),
+    path('applications/<int:application_id>/delete/', views.delete_application, name='delete_application'),
     path('password-reset/', 
          auth_views.PasswordResetView.as_view(template_name='accounts/password_reset.html'),
          name='password_reset'),
